@@ -13,6 +13,91 @@ const categories = [
 
 let selectedCategory = null;
 
+const DB_NAME = "ExpenseTrackerDB";
+const DB_VERSION = 1;
+const STORE_NAME = "expenses";
+
+function openDatabase() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+        request.onupgradeneeded = event => {
+            const db = event.target.result;
+
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                const store = db.createObjectStore(STORE_NAME, {
+                    keyPath: "id",
+                    autoIncrement: true
+                });
+
+                store.createIndex("date", "date", {
+                    unique: false
+                });
+
+                store.createIndex("category", "category", {
+                    unique: false
+                });
+            }
+        };
+
+        request.onsuccess = () => {
+            resolve(request.result);
+        };
+
+        request.onerror = () => {
+            reject(request.error);
+        };
+    });
+}
+
+async function saveExpenseToDatabase(expense) {
+    const db = await openDatabase();
+
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(
+            STORE_NAME,
+            "readwrite"
+        );
+
+        const store = transaction.objectStore(STORE_NAME);
+
+        const request = store.add(expense);
+
+        request.onsuccess = () => {
+            resolve(request.result);
+        };
+
+        request.onerror = () => {
+            reject(request.error);
+        };
+
+        transaction.oncomplete = () => {
+            db.close();
+        };
+    });
+}
+
+function getCurrentDateTime() {
+    const now = new Date();
+
+    const date = [
+        now.getFullYear(),
+        String(now.getMonth() + 1).padStart(2, "0"),
+        String(now.getDate()).padStart(2, "0")
+    ].join("-");
+
+    const time = [
+        String(now.getHours()).padStart(2, "0"),
+        String(now.getMinutes()).padStart(2, "0"),
+        String(now.getSeconds()).padStart(2, "0")
+    ].join(":");
+
+    return {
+        date,
+        time
+    };
+}
+
 function showHome() {
     app.innerHTML = `
         <div class="app-header">
@@ -56,6 +141,7 @@ function showAddExpense() {
             <div class="category-grid">
                 ${categories.map(category => `
                     <button
+                        type="button"
                         class="category-button"
                         data-category="${category.id}"
                     >
@@ -82,7 +168,7 @@ function showAddExpense() {
                         id="amount"
                         type="number"
                         inputmode="decimal"
-                        min="0"
+                        min="0.01"
                         step="0.01"
                         placeholder="0.00"
                         autocomplete="off"
@@ -103,15 +189,23 @@ function showAddExpense() {
                 >
             </div>
 
-            <button id="saveExpenseButton" class="save-button">
+            <button
+                type="button"
+                id="saveExpenseButton"
+                class="save-button"
+            >
                 Save Expense
             </button>
 
-            <button id="backButton" class="back-button">
+            <button
+                type="button"
+                id="backButton"
+                class="back-button"
+            >
                 Back
             </button>
 
-            <div id="status"></div>
+            <div id="status" aria-live="polite"></div>
 
         </section>
     `;
@@ -128,7 +222,8 @@ function showAddExpense() {
 }
 
 function setupCategoryButtons() {
-    const buttons = document.querySelectorAll(".category-button");
+    const buttons =
+        document.querySelectorAll(".category-button");
 
     buttons.forEach(button => {
         button.addEventListener("click", () => {
@@ -144,21 +239,33 @@ function setupCategoryButtons() {
     });
 }
 
-function saveExpense() {
-    const amountInput = document.getElementById("amount");
-    const noteInput = document.getElementById("note");
-    const status = document.getElementById("status");
+async function saveExpense() {
+    const amountInput =
+        document.getElementById("amount");
+
+    const noteInput =
+        document.getElementById("note");
+
+    const status =
+        document.getElementById("status");
+
+    const saveButton =
+        document.getElementById("saveExpenseButton");
 
     const amount = Number(amountInput.value);
+
     const note = noteInput.value.trim();
 
     if (!selectedCategory) {
-        status.textContent = "Please select a category.";
+        status.textContent =
+            "Please select a category.";
         return;
     }
 
-    if (!amount || amount <= 0) {
-        status.textContent = "Please enter a valid amount.";
+    if (!Number.isFinite(amount) || amount <= 0) {
+        status.textContent =
+            "Please enter a valid amount.";
+
         amountInput.focus();
         return;
     }
@@ -167,15 +274,59 @@ function saveExpense() {
         item => item.id === selectedCategory
     );
 
-    status.textContent =
-        `${category.icon} ${category.name} — ₹${amount.toFixed(2)}` +
-        (note ? ` — ${note}` : "");
+    const { date, time } =
+        getCurrentDateTime();
+
+    const expense = {
+        category: category.id,
+        categoryName: category.name,
+        amount: Number(amount.toFixed(2)),
+        note,
+        date,
+        time,
+        createdAt: new Date().toISOString()
+    };
+
+    try {
+        saveButton.disabled = true;
+        saveButton.textContent = "Saving...";
+
+        await saveExpenseToDatabase(expense);
+
+        status.textContent =
+            `Saved: ${category.icon} ${category.name} — ₹${expense.amount.toFixed(2)}`;
+
+        amountInput.value = "";
+        noteInput.value = "";
+
+        document
+            .querySelectorAll(".category-button")
+            .forEach(button => {
+                button.classList.remove("selected");
+            });
+
+        selectedCategory = null;
+
+    } catch (error) {
+        console.error(
+            "Failed to save expense:",
+            error
+        );
+
+        status.textContent =
+            "Unable to save the expense. Please try again.";
+
+    } finally {
+        saveButton.disabled = false;
+        saveButton.textContent = "Save Expense";
+    }
 }
 
 function initializeApp() {
-    const params = new URLSearchParams(
-        window.location.search
-    );
+    const params =
+        new URLSearchParams(
+            window.location.search
+        );
 
     if (params.get("action") === "add") {
         showAddExpense();
@@ -191,7 +342,9 @@ if ("serviceWorker" in navigator) {
         navigator.serviceWorker
             .register("./sw.js")
             .then(() => {
-                console.log("Service Worker registered");
+                console.log(
+                    "Service Worker registered"
+                );
             })
             .catch(error => {
                 console.error(
