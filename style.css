@@ -2,109 +2,260 @@
     box-sizing: border-box;
 }
 
-html,
 body {
     margin: 0;
-    padding: 0;
-    min-height: 100%;
-    font-family: -apple-system,
-                 BlinkMacSystemFont,
-                 "SF Pro Display",
-                 "Segoe UI",
-                 sans-serif;
-    background: #f5f7f6;
-}
+    min-height: 100vh;
 
-body {
-    display: flex;
-    justify-content: center;
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+    background: #f4f7f6;
+    color: #111827;
 }
 
 .app {
-    width: 100%;
-    max-width: 480px;
-    min-height: 100vh;
-    padding: 32px 20px;
+    width: min(100% - 32px, 560px);
+    margin: 0 auto;
+    padding: 32px 0 48px;
 }
 
 .app-header {
     text-align: center;
-    margin-top: 40px;
-    margin-bottom: 32px;
+    margin-bottom: 28px;
 }
 
 .app-header h1 {
     margin: 0;
-    font-size: 28px;
+    font-size: 32px;
     font-weight: 700;
 }
 
 .app-header p {
-    margin-top: 8px;
-    color: #6b7280;
-    font-size: 15px;
+    margin: 8px 0 0;
+    color: #64748b;
+    font-size: 16px;
+}
+
+.card,
+.expense-card {
+    background: white;
+    border-radius: 24px;
+    padding: 32px;
+    box-shadow: 0 12px 35px rgba(15, 23, 42, 0.08);
 }
 
 .card {
-    background: white;
-    border-radius: 24px;
-    padding: 36px 24px;
     text-align: center;
-    box-shadow:
-        0 8px 30px rgba(0, 0, 0, 0.06);
 }
 
 .icon {
-    width: 72px;
-    height: 72px;
-    margin: 0 auto 20px;
+    width: 90px;
+    height: 90px;
+
+    margin: 0 auto 28px;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    border-radius: 20px;
+    border-radius: 24px;
 
-    background: #e5f7f0;
+    background: #e1f5ee;
     color: #0f8f68;
 
-    font-size: 32px;
-    font-weight: 700;
+    font-size: 42px;
+    font-weight: 600;
 }
 
-.card h2 {
-    margin: 0;
-    font-size: 24px;
+.card h2,
+.expense-card h2 {
+    margin: 0 0 10px;
+    font-size: 25px;
 }
 
 .card p {
-    color: #6b7280;
-    margin: 10px 0 28px;
+    margin: 0 0 28px;
+    color: #64748b;
+    font-size: 17px;
 }
 
 button {
     width: 100%;
-    border: none;
+    border: 0;
+    border-radius: 16px;
+
+    min-height: 56px;
+
+    font-size: 17px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    -webkit-tap-highlight-color: transparent;
+}
+
+.card button,
+.save-button {
+    background: #0f956f;
+    color: white;
+}
+
+.expense-card h2 {
+    text-align: center;
+    margin-bottom: 22px;
+}
+
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+
+    margin-bottom: 28px;
+}
+
+.category-button {
+    min-height: 82px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 5px;
+
+    background: #f3f6f5;
+    color: #1f2937;
+
+    border: 2px solid transparent;
+
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.category-icon {
+    font-size: 25px;
+}
+
+.category-button.selected {
+    background: #e1f5ee;
+    color: #087a5a;
+    border-color: #0f956f;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+
+    margin-bottom: 8px;
+
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.form-group label span {
+    color: #94a3b8;
+    font-weight: 400;
+}
+
+.amount-input {
+    display: flex;
+    align-items: center;
+
+    border: 2px solid #dce4e1;
+    border-radius: 14px;
+
+    padding: 0 16px;
+
+    background: white;
+}
+
+.amount-input:focus-within {
+    border-color: #0f956f;
+}
+
+.amount-input span {
+    font-size: 24px;
+    font-weight: 600;
+    color: #0f956f;
+}
+
+.amount-input input {
+    width: 100%;
+
+    border: 0;
+    outline: 0;
+
+    padding: 15px 10px;
+
+    font-size: 22px;
+    font-weight: 600;
+
+    background: transparent;
+}
+
+.form-group > input {
+    width: 100%;
+
+    border: 2px solid #dce4e1;
     border-radius: 14px;
 
     padding: 16px;
 
-    background: #0f8f68;
-    color: white;
+    outline: none;
 
     font-size: 17px;
-    font-weight: 600;
-
-    cursor: pointer;
 }
 
-button:active {
-    transform: scale(0.98);
+.form-group > input:focus {
+    border-color: #0f956f;
+}
+
+.save-button {
+    margin-top: 8px;
+}
+
+.back-button {
+    margin-top: 10px;
+
+    background: #eef2f1;
+    color: #334155;
 }
 
 #status {
+    min-height: 24px;
+
+    margin-top: 18px;
+
     text-align: center;
-    margin-top: 20px;
-    color: #0f8f68;
-    font-size: 14px;
+
+    color: #0f956f;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+@media (max-width: 420px) {
+    .app {
+        width: min(100% - 20px, 560px);
+        padding-top: 20px;
+    }
+
+    .card,
+    .expense-card {
+        padding: 22px;
+        border-radius: 20px;
+    }
+
+    .app-header h1 {
+        font-size: 27px;
+    }
+
+    .category-button {
+        min-height: 78px;
+    }
 }
